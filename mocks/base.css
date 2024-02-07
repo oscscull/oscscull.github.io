@@ -9,6 +9,8 @@ body {
 body {
   display: flex;
   flex-direction: column;
+  background-color: #ececec;
+  color: #333;
 }
 
 header {
@@ -47,7 +49,6 @@ nav a {
 }
 
 .homebox {
-  background-color:#ececec;
   display: flex;
   flex-direction: column;
   height: calc(100% - 20px);
@@ -75,6 +76,9 @@ article {
 img {
   width: 100%;
   height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
   border-radius: 8px;
 }
 
@@ -104,6 +108,35 @@ img {
   text-decoration: none;
 }
 
+
+.aboutContent {
+  display: flex;
+}
+
+
+.contentHalf {
+  display: flex;
+  width: 100%;
+  padding: 20px;
+}
+
+.aboutContent .left {
+  justify-content: right;
+}
+
+.aboutContent .image-container {
+  border-radius: 10px; /* Adjust as needed */
+  max-width: 500px;
+}
+
+.contentHalf section {
+  max-width: 500px;
+  height: fit-content;
+  padding: 20px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
 .sendfox-form {
   display: flex;
   flex-direction: column;
@@ -120,7 +153,7 @@ img {
 }
 
 .sendfox-form button {
-  background-color: #3498db;
+  background-color: #333;
   color: #fff;
   padding: 10px;
   border: none;
@@ -136,6 +169,10 @@ img {
 @media screen and (max-width: 700px) {
   .left {
     max-width: 100%; /* Full width on smaller screens */
+  }
+
+  .aboutContent .left {
+    display: none;
   }
 }
 
