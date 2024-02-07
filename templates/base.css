@@ -1,12 +1,22 @@
+html,
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   margin: 0;
   padding: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
 }
 
 header {
   background-color: #333;
-  color: #fff;
+  color: #ececec;
+}
+
+nav {
   padding: 10px;
 }
 
@@ -15,13 +25,11 @@ nav ul {
   margin: 0;
   padding: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: right;
 }
 
-nav .home {
-  flex-grow: 1;
-  text-align: center;
+nav li {
+  margin-left: 10px;
 }
 
 nav a {
@@ -30,16 +38,31 @@ nav a {
   font-weight: bold;
 }
 
-.about {
-  margin-left: auto;
-}
-
 .content {
-  FONT-WEIGHT: 200;
+  font-weight: 200;
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
   padding: 20px 10% 20px 10%;
+}
+
+.homebox {
+  background-color:#ececec;
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 20px);
+  margin-top: auto;
+  background-size: cover;
+  background-position: center;
+}
+
+.homecontent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  height: 100%;
+  width: 100%;
 }
 
 article {
@@ -68,9 +91,9 @@ img {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-   -webkit-line-clamp: 3; /* number of lines to show */
-           line-clamp: 3; 
-   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3; /* number of lines to show */
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .read-more {
@@ -79,6 +102,41 @@ img {
   margin-top: 10px;
   color: #3498db;
   text-decoration: none;
+}
+
+.sendfox-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  height: 150px;
+}
+
+.sendfox-form p {
+  margin: 10px 0;
+}
+
+.sendfox-form button {
+  background-color: #3498db;
+  color: #fff;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.sendfox-form button:hover {
+  background-color: #2980b9;
+}
+
+/* Additional styling for the left section on smaller screens */
+@media screen and (max-width: 700px) {
+  .left {
+    max-width: 100%; /* Full width on smaller screens */
+  }
 }
 
 @media screen and (max-width: 1300px) {
