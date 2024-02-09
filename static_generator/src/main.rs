@@ -1,5 +1,6 @@
 use std::fs;
 use std::io::{self, Write};
+use std::collections::HashMap;
 
 fn main() -> io::Result<()> {
     println!("Welcome to the HTML Template Editor!");
@@ -28,15 +29,14 @@ fn main() -> io::Result<()> {
         let template_content = fs::read_to_string(format!("{}/{}", templates_dir, selected_template_file))?;
         
         // Initialize a HashMap to store placeholders and their default content
-    let mut placeholder_map: HashMap<String, String> = HashMap::new();
+        let mut placeholder_map: HashMap<String, String> = HashMap::new();
 
-    // Extract placeholder tokens from the HTML template and store them in the HashMap
-    for line in template_content.lines() {
-        for token in line.split("$$").skip(1).step_by(2) {
-            placeholder_map.insert(token.to_string(), String::from("your content here"));
+        // Extract placeholder tokens from the HTML template and store them in the HashMap
+        for line in template_content.lines() {
+            for token in line.split("$$").skip(1).step_by(2) {
+                placeholder_map.insert(token.to_string(), String::from("your content here"));
+            }
         }
-    }
-
 
         // Wait for user input to proceed
         println!("Press Enter when you have finished editing the text file.");
