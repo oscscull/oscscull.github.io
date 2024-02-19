@@ -1,0 +1,189 @@
+html,
+body {
+  font-family: "Arial", sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background-color: #ececec;
+  color: #333;
+}
+
+header {
+  background-color: #333;
+  color: #ececec;
+}
+
+nav {
+  padding: 10px;
+}
+
+nav ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: right;
+}
+
+nav li {
+  margin-left: 10px;
+}
+
+nav a {
+  text-decoration: none;
+  color: #fff;
+  font-weight: bold;
+}
+
+.content {
+  font-weight: 200;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  padding: 20px 10% 20px 10%;
+}
+
+.homebox {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 20px);
+  margin-top: auto;
+  background-size: cover;
+  background-position: center;
+}
+
+.homecontent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  height: 100%;
+  width: 100%;
+}
+
+article {
+  width: calc(33% - 20px); /* 25% width with 20px margin between cards */
+  margin-bottom: 20px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+img {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.info {
+  padding: 10px;
+}
+
+.date {
+  font-size: 0.8em;
+  color: #777;
+}
+
+.short-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* number of lines to show */
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.read-more {
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+  color: #3498db;
+  text-decoration: none;
+}
+
+
+.aboutContent {
+  display: flex;
+}
+
+
+.contentHalf {
+  display: flex;
+  width: 100%;
+  padding: 20px;
+}
+
+.aboutContent .left {
+  justify-content: right;
+}
+
+.aboutContent .image-container {
+  border-radius: 10px; /* Adjust as needed */
+  max-width: 500px;
+}
+
+.contentHalf section {
+  max-width: 500px;
+  height: fit-content;
+  padding: 20px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.sendfox-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  height: 150px;
+}
+
+.sendfox-form p {
+  margin: 10px 0;
+}
+
+.sendfox-form button {
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.sendfox-form button:hover {
+  background-color: #2980b9;
+}
+
+/* Additional styling for the left section on smaller screens */
+@media screen and (max-width: 700px) {
+  .left {
+    max-width: 100%; /* Full width on smaller screens */
+  }
+
+  .aboutContent .left {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 1300px) {
+  article {
+    width: calc(50% - 20px); /* One card per row on phones */
+  }
+}
+
+@media screen and (max-width: 700px) {
+  article {
+    width: calc(100% - 20px); /* One card per row on phones */
+  }
+}
