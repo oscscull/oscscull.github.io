@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
@@ -5,7 +6,6 @@ use std::io;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
-use regex::Regex;
 use walkdir::WalkDir;
 
 fn main() -> io::Result<()> {
@@ -52,9 +52,9 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
                     }
 
                     let base_file = fs::read_to_string(entry.path())?;
-                    let transcribed_content = transcribe(&base_file, &templates, HashMap::new());
+                    let transcribed_content =
+                        transcribe(&base_file, &templates, &HashMap::new(), entry.path());
                     write_string_to_file(&dest_file_path, &transcribed_content)?;
-                    break;
                 }
                 if ext == "css" {
                     let relative_path = entry.path().strip_prefix(src_dir).unwrap();
@@ -85,44 +85,119 @@ fn write_string_to_file(path: &PathBuf, content: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-fn pretty_print_map(map: &HashMap<String, String>) {
-    for (key, value) in map {
-        println!("{} => {}", key, value);
+// fn pretty_print_map(map: &HashMap<String, String>) {
+//     for (key, value) in map {
+//         println!("{} => {}", key, value);
+//     }
+// }
+
+fn transcribe(
+    file: &str,
+    templates: &HashMap<String, String>,
+    variables: &HashMap<String, String>,
+    parent: &Path,
+) -> String {
+    let mut final_result = file.to_string();
+    final_result = replace_vars(&final_result, variables);
+    final_result = replace_md_placeholder(&final_result, parent);
+    let mut extracted_variables = variables.clone();
+    loop {
+        let mut found_match = false;
+
+        for (pattern, template) in templates {
+            if let Some(captures) = regex::Regex::new(pattern).unwrap().captures(&final_result) {
+                found_match = true;
+                let mut replaced_template = template.clone();
+                for capture in captures.iter().skip(1) {
+                    if let Some(capture) = capture {
+                        let placeholder = capture.as_str().to_string();
+                        extracted_variables.extend(read_vars(&placeholder));
+                    }
+                }
+                replaced_template =
+                    transcribe(&replaced_template, templates, &extracted_variables, parent);
+                let re = Regex::new(pattern).unwrap();
+                final_result = re.replace(&final_result, replaced_template).to_string();
+            }
+        }
+
+        if !found_match {
+            // No more matches found, break out of the loop
+            break;
+        }
     }
+
+    final_result
 }
 
-fn transcribe(file: &str, templates: &HashMap<String, String>, variables: HashMap<String, String>) -> String {
-    pretty_print_map(&variables);
-    for (pattern, template) in templates {
-        if let Some(captures) = Regex::new(pattern).unwrap().captures(&file) {
-            let mut replaced_template = template.clone();
-            for capture in captures.iter().skip(1) {
-                if let Some(capture) = capture {
-                    let placeholder = capture.as_str().to_string();
-                    if let Some(replacement) = variables.get(&placeholder) {
-                        replaced_template = replaced_template.replace(&format!("{{[{}]}}", placeholder), replacement);
+fn read_vars(input: &str) -> HashMap<String, String> {
+    let mut result = HashMap::new();
+    let mut key = String::new();
+    let mut value = String::new();
+    let mut nesting_level = 0;
+    let mut in_value = false;
+
+    for c in input.chars() {
+        match c {
+            '{' => {
+                nesting_level += 1;
+                if nesting_level == 2 {
+                    in_value = true;
+                }
+            }
+            '}' => {
+                nesting_level -= 1;
+                if nesting_level == 1 {
+                    in_value = false;
+                    result.insert(key.trim().to_string(), value.trim().to_string());
+                    key.clear();
+                    value.clear();
+                }
+            }
+            _ => {
+                if in_value {
+                    value.push(c);
+                } else {
+                    if c != '=' {
+                        key.push(c);
                     }
                 }
             }
-
-            let replaced_file = Regex::new(pattern).unwrap().replace(&file, |caps: &regex::Captures| {
-                let mut replaced = replaced_template.clone();
-                for (_i, cap) in caps.iter().enumerate().skip(1) {
-                    if let Some(placeholder) = cap {
-                        if let Some(replacement) = variables.get(placeholder.as_str()) {
-                            replaced = replaced.replace(&format!("{{[{}]}}", placeholder.as_str()), replacement);
-                        }
-                    }
-                }
-                replaced
-            });
-
-            return transcribe(&replaced_file, templates, variables);
         }
     }
-    file.to_string()
+    result
 }
 
+fn replace_vars(string: &str, replacements: &HashMap<String, String>) -> String {
+    let mut result = string.to_string();
+
+    for (placeholder, value) in replacements {
+        result = result.replace(&format!("{{[{}]}}", placeholder), value);
+    }
+
+    // Replace any placeholders not found in the hashmap with an empty string
+    let re = Regex::new(r"\{\[[^\]]*\]\}").unwrap();
+    result = re.replace_all(&result, "").to_string();
+
+    result
+}
+
+fn replace_md_placeholder(input: &str, file_path: &Path) -> String {
+    let re = regex::Regex::new(r#"<md .*src="(.*)">.*</md>"#).unwrap();
+    let file_contents = re.replace_all(input, |caps: &regex::Captures| {
+        if let Some(filename) = caps.get(1).map(|m| m.as_str()) {
+            if let Some(parent_dir) = file_path.parent() {
+                let full_path = PathBuf::from(parent_dir).join(filename);
+                if let Ok(contents) = fs::read_to_string(&full_path) {
+                    return contents;
+                }
+            }
+        }
+        "".to_string() // Return empty string if the file couldn't be read or if capture group is invalid
+    });
+
+    file_contents.to_string()
+}
 
 fn list_template_files(templates_dir: &str) -> io::Result<HashMap<String, String>> {
     let mut template_files = HashMap::new();
