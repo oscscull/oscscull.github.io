@@ -6,6 +6,7 @@ use std::io;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+use std::time::SystemTime;
 use walkdir::WalkDir;
 use dotenv::dotenv;
 use std::env;
@@ -43,6 +44,7 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
     // List available templates
     let templates_dir_str = env::var("TEMPLATES_DIR").expect("Error: TEMPLATES_DIR environment variable not set");
     let templates = list_template_files(&templates_dir_str)?;
+    let variables = preload_variables();
 
     // Copy files from source to destination
     for entry in WalkDir::new(src_dir).into_iter().filter_map(|e| e.ok()) {
@@ -62,7 +64,7 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
 
                     let base_file = fs::read_to_string(entry.path())?;
                     let transcribed_content =
-                        transcribe(&base_file, &templates, &preload_variables(), entry.path());
+                        transcribe(&base_file, &templates, &variables, entry.path());
                     write_string_to_file(&dest_file_path, &transcribed_content)?;
                 }
                 if ext == "css" {
@@ -98,7 +100,49 @@ fn preload_variables() -> HashMap<String, String> {
     map.insert("recentImage".to_string(), default_image_str.to_string());
     map.insert("recentImageDescription".to_string(), default_image_desc_str.to_string());
 
+    let default_article_dir = env::var("ARTICLES_DIR").expect("Error: ARTICLES_DIR environment variable not set");
+    let recent_article_path = most_recent_html_file(&default_article_dir);
+    println!("{}", recent_article_path.to_string_lossy().to_string());
+
     map
+}
+
+fn most_recent_html_file(directory_path: &str) -> PathBuf {
+    // Read the directory
+    if let Ok(entries) = fs::read_dir(directory_path) {
+        // Filter HTML files and keep track of the most recent one
+        let mut most_recent_html_file: Option<(PathBuf, SystemTime)> = None;
+
+        for entry in entries.flatten() {
+            if let Ok(metadata) = entry.metadata() {
+                // Check if it's a file and has an HTML extension
+                if metadata.is_file() {
+                    if let Some(extension) = entry.path().extension() {
+                        if extension == "html" {
+                            // Compare creation time to find the most recent one
+                            if let Ok(created_at) = metadata.created() {
+                                if let Some((_, current_time)) = most_recent_html_file {
+                                    if created_at > current_time {
+                                        most_recent_html_file = Some((entry.path(), created_at));
+                                    }
+                                } else {
+                                    most_recent_html_file = Some((entry.path(), created_at));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Return the path of the most recent HTML file, if any
+        if let Some((path, _)) = most_recent_html_file {
+            return path;
+        }
+    }
+
+    // If no HTML file found, panic
+    panic!("No HTML file found in the articles directory.");
 }
 
 fn write_string_to_file(path: &PathBuf, content: &str) -> std::io::Result<()> {
@@ -111,11 +155,11 @@ fn write_string_to_file(path: &PathBuf, content: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-fn pretty_print_map(map: &HashMap<String, String>) {
-    for (key, value) in map {
-        println!("{} => {}", key, value);
-    }
-}
+// fn pretty_print_map(map: &HashMap<String, String>) {
+//     for (key, value) in map {
+//         println!("{} => {}", key, value);
+//     }
+// }
 
 fn transcribe(
     file: &str,
@@ -201,7 +245,7 @@ fn replace_vars(string: &str, replacements: &HashMap<String, String>) -> String 
     }
 
     // Replace any placeholders not found in the hashmap with an empty string
-    let re = Regex::new(r"\\[\\[{}\\]\\]").unwrap();
+    let re = Regex::new(r"\[\[.*\]\]").unwrap();
     result = re.replace_all(&result, "").to_string();
 
     result
