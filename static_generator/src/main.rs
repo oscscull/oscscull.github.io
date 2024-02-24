@@ -7,11 +7,19 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use walkdir::WalkDir;
+use dotenv::dotenv;
+use std::env;
+
 
 fn main() -> io::Result<()> {
+    dotenv().ok();
     println!("Current Working Directory: {:?}", std::env::current_dir());
-    let src_dir = Path::new("./content");
-    let dest_dir = Path::new("./docs");
+    let src_dir_str = env::var("CONTENT_DIR").expect("Error: CONTENT_DIR environment variable not set");
+    let src_dir = Path::new(&src_dir_str);
+
+    // Get the destination directory path from the environment variable
+    let dest_dir_str = env::var("DOCS_DIR").expect("Error: DOCS_DIR environment variable not set");
+    let dest_dir = Path::new(&dest_dir_str);
 
     walk_files(src_dir, dest_dir)?;
 
@@ -33,7 +41,8 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
     fs::create_dir_all(dest_dir)?;
 
     // List available templates
-    let templates = list_template_files("./templates")?;
+    let templates_dir_str = env::var("TEMPLATES_DIR").expect("Error: TEMPLATES_DIR environment variable not set");
+    let templates = list_template_files(&templates_dir_str)?;
 
     // Copy files from source to destination
     for entry in WalkDir::new(src_dir).into_iter().filter_map(|e| e.ok()) {
@@ -53,7 +62,7 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
 
                     let base_file = fs::read_to_string(entry.path())?;
                     let transcribed_content =
-                        transcribe(&base_file, &templates, &HashMap::new(), entry.path());
+                        transcribe(&base_file, &templates, &preload_variables(), entry.path());
                     write_string_to_file(&dest_file_path, &transcribed_content)?;
                 }
                 if ext == "css" {
@@ -75,6 +84,23 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
     Ok(())
 }
 
+fn preload_variables() -> HashMap<String, String> {
+    //recentText
+    //recentDate
+    //recentLink
+    //recentTitle
+    //recentImage
+    //recentImageDescription
+    let mut map = HashMap::new();
+
+    let default_image_str = env::var("DEFAULT_IMAGE").expect("Error: DEFAULT_IMAGE environment variable not set");
+    let default_image_desc_str = env::var("DEFAULT_IMAGE_DESC").expect("Error: DEFAULT_IMAGE_DESC environment variable not set");
+    map.insert("recentImage".to_string(), default_image_str.to_string());
+    map.insert("recentImageDescription".to_string(), default_image_desc_str.to_string());
+
+    map
+}
+
 fn write_string_to_file(path: &PathBuf, content: &str) -> std::io::Result<()> {
     // Open the file for writing
     let mut file = File::create(path)?;
@@ -85,11 +111,11 @@ fn write_string_to_file(path: &PathBuf, content: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-// fn pretty_print_map(map: &HashMap<String, String>) {
-//     for (key, value) in map {
-//         println!("{} => {}", key, value);
-//     }
-// }
+fn pretty_print_map(map: &HashMap<String, String>) {
+    for (key, value) in map {
+        println!("{} => {}", key, value);
+    }
+}
 
 fn transcribe(
     file: &str,
@@ -170,13 +196,12 @@ fn read_vars(input: &str) -> HashMap<String, String> {
 
 fn replace_vars(string: &str, replacements: &HashMap<String, String>) -> String {
     let mut result = string.to_string();
-
     for (placeholder, value) in replacements {
-        result = result.replace(&format!("{{[{}]}}", placeholder), value);
+        result = result.replace(&format!("[[{}]]", placeholder), value);
     }
 
     // Replace any placeholders not found in the hashmap with an empty string
-    let re = Regex::new(r"\{\[[^\]]*\]\}").unwrap();
+    let re = Regex::new(r"\\[\\[{}\\]\\]").unwrap();
     result = re.replace_all(&result, "").to_string();
 
     result
