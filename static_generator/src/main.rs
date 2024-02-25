@@ -1,3 +1,5 @@
+use chrono::DateTime;
+use chrono::Local;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
@@ -44,7 +46,7 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
     // List available templates
     let templates_dir_str = env::var("TEMPLATES_DIR").expect("Error: TEMPLATES_DIR environment variable not set");
     let templates = list_template_files(&templates_dir_str)?;
-    let variables = preload_variables();
+    let variables = preload_variables()?;
 
     // Copy files from source to destination
     for entry in WalkDir::new(src_dir).into_iter().filter_map(|e| e.ok()) {
@@ -86,13 +88,7 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn preload_variables() -> HashMap<String, String> {
-    //recentText
-    //recentDate
-    //recentLink
-    //recentTitle
-    //recentImage
-    //recentImageDescription
+fn preload_variables() -> Result<HashMap<String, String>, std::io::Error> {
     let mut map = HashMap::new();
 
     let default_image_str = env::var("DEFAULT_IMAGE").expect("Error: DEFAULT_IMAGE environment variable not set");
@@ -100,26 +96,66 @@ fn preload_variables() -> HashMap<String, String> {
     map.insert("recentImage".to_string(), default_image_str.to_string());
     map.insert("recentImageDescription".to_string(), default_image_desc_str.to_string());
 
-    let default_article_dir = env::var("ARTICLES_DIR").expect("Error: ARTICLES_DIR environment variable not set");
-    let recent_article_path = most_recent_html_file(&default_article_dir);
-    println!("{}", recent_article_path.to_string_lossy().to_string());
+    let default_content_dir = env::var("CONTENT_DIR").expect("Error: CONTENT_DIR environment variable not set");
+    let default_article_ext = env::var("ARTICLES_SUBDIR").expect("Error: ARTICLES_SUBDIR environment variable not set");
+    let recent_article_path = most_recent_html_file(&(default_content_dir.to_string() + &default_article_ext));
 
-    map
+    map.insert("recentDate".to_string(), get_created_at(&recent_article_path)?);
+
+    let relative_path = recent_article_path.strip_prefix(default_content_dir).unwrap();
+    map.insert("recentLink".to_string(), path_to_html_path(&relative_path));
+    
+    let mut article_file = fs::read_to_string(&recent_article_path)?;
+    article_file = replace_md_placeholder(&article_file, &recent_article_path);
+
+    let re = Regex::new(r#"<.*>((.|\n)*?)</.*>"#).unwrap();
+    if let Some(captures) = re.captures(&article_file) {
+        if let Some(capture) = captures.get(1) {
+            article_file = capture.as_str().to_string();
+        }
+    }
+    let vars = read_vars(&article_file);
+
+    if let Some(value) = vars.get("title") {
+        map.insert("recentTitle".to_string(), value.to_string());
+    } 
+    
+    if let Some(value) = vars.get("content") {
+        map.insert("recentText".to_string(), value.to_string());
+    } 
+
+    if let Some(value) = vars.get("imageHero") {
+        map.insert("recentImage".to_string(), value.to_string());
+    } 
+
+    if let Some(value) = vars.get("imageHeroAlt") {
+        map.insert("recentImageDescription".to_string(), value.to_string());
+    } 
+
+    Ok(map)
 }
 
+fn get_created_at(path: &Path) -> Result<String, io::Error> {
+    let metadata = fs::metadata(path)?;
+    let created_at = metadata.created()?;
+    let local_created_at: DateTime<Local> = created_at.into();
+    
+    // Format the creation time as a string
+    let formatted_date = local_created_at.format("%Y-%m-%d %H:%M:%S").to_string();
+    
+    Ok(formatted_date)
+}
+
+
 fn most_recent_html_file(directory_path: &str) -> PathBuf {
-    // Read the directory
     if let Ok(entries) = fs::read_dir(directory_path) {
-        // Filter HTML files and keep track of the most recent one
         let mut most_recent_html_file: Option<(PathBuf, SystemTime)> = None;
 
         for entry in entries.flatten() {
             if let Ok(metadata) = entry.metadata() {
-                // Check if it's a file and has an HTML extension
                 if metadata.is_file() {
                     if let Some(extension) = entry.path().extension() {
                         if extension == "html" {
-                            // Compare creation time to find the most recent one
                             if let Ok(created_at) = metadata.created() {
                                 if let Some((_, current_time)) = most_recent_html_file {
                                     if created_at > current_time {
@@ -143,6 +179,25 @@ fn most_recent_html_file(directory_path: &str) -> PathBuf {
 
     // If no HTML file found, panic
     panic!("No HTML file found in the articles directory.");
+}
+
+fn path_to_html_path(path: &Path) -> String {
+    let mut html_path = String::new();
+
+    html_path.push('/');
+
+    for component in path.components() {
+        let part = component.as_os_str().to_string_lossy();
+        html_path.push_str(&part);
+        html_path.push('/');    
+    }
+
+    // Remove trailing slash if the path is not empty
+    if !html_path.is_empty() {
+        html_path.pop();
+    }
+
+    html_path
 }
 
 fn write_string_to_file(path: &PathBuf, content: &str) -> std::io::Result<()> {
