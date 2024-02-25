@@ -43,6 +43,12 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
     // Recreate the destination directory
     fs::create_dir_all(dest_dir)?;
 
+    // Write the CNAME if needed
+    let cname_path = Path::new(dest_dir).join("CNAME");
+    if let Ok(cname_value) = env::var("CNAME") {
+        fs::write(&cname_path, cname_value)?;
+    }
+
     // List available templates
     let templates_dir_str = env::var("TEMPLATES_DIR").expect("Error: TEMPLATES_DIR environment variable not set");
     let templates = list_template_files(&templates_dir_str)?;
