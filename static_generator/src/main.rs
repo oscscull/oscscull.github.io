@@ -1,7 +1,9 @@
 use chrono::DateTime;
 use chrono::Local;
+use dotenv::dotenv;
 use regex::Regex;
 use std::collections::HashMap;
+use std::env;
 use std::fs;
 use std::fs::File;
 use std::io;
@@ -10,14 +12,12 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::time::SystemTime;
 use walkdir::WalkDir;
-use dotenv::dotenv;
-use std::env;
-
 
 fn main() -> io::Result<()> {
     dotenv().ok();
     println!("Current Working Directory: {:?}", std::env::current_dir());
-    let src_dir_str = env::var("CONTENT_DIR").expect("Error: CONTENT_DIR environment variable not set");
+    let src_dir_str =
+        env::var("CONTENT_DIR").expect("Error: CONTENT_DIR environment variable not set");
     let src_dir = Path::new(&src_dir_str);
 
     // Get the destination directory path from the environment variable
@@ -50,7 +50,8 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
     }
 
     // List available templates
-    let templates_dir_str = env::var("TEMPLATES_DIR").expect("Error: TEMPLATES_DIR environment variable not set");
+    let templates_dir_str =
+        env::var("TEMPLATES_DIR").expect("Error: TEMPLATES_DIR environment variable not set");
     let templates = list_template_files(&templates_dir_str)?;
     let variables = preload_variables()?;
 
@@ -97,20 +98,33 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
 fn preload_variables() -> Result<HashMap<String, String>, std::io::Error> {
     let mut map = HashMap::new();
 
-    let default_image_str = env::var("DEFAULT_IMAGE").expect("Error: DEFAULT_IMAGE environment variable not set");
-    let default_image_desc_str = env::var("DEFAULT_IMAGE_DESC").expect("Error: DEFAULT_IMAGE_DESC environment variable not set");
+    let default_image_str =
+        env::var("DEFAULT_IMAGE").expect("Error: DEFAULT_IMAGE environment variable not set");
+    let default_image_desc_str = env::var("DEFAULT_IMAGE_DESC")
+        .expect("Error: DEFAULT_IMAGE_DESC environment variable not set");
     map.insert("recentImage".to_string(), default_image_str.to_string());
-    map.insert("recentImageDescription".to_string(), default_image_desc_str.to_string());
+    map.insert(
+        "recentImageDescription".to_string(),
+        default_image_desc_str.to_string(),
+    );
 
-    let default_content_dir = env::var("CONTENT_DIR").expect("Error: CONTENT_DIR environment variable not set");
-    let default_article_ext = env::var("ARTICLES_SUBDIR").expect("Error: ARTICLES_SUBDIR environment variable not set");
-    let recent_article_path = most_recent_html_file(&(default_content_dir.to_string() + &default_article_ext));
+    let default_content_dir =
+        env::var("CONTENT_DIR").expect("Error: CONTENT_DIR environment variable not set");
+    let default_article_ext =
+        env::var("ARTICLES_SUBDIR").expect("Error: ARTICLES_SUBDIR environment variable not set");
+    let recent_article_path =
+        most_recent_html_file(&(default_content_dir.to_string() + &default_article_ext));
 
-    map.insert("recentDate".to_string(), get_created_at(&recent_article_path)?);
+    map.insert(
+        "recentDate".to_string(),
+        get_created_at(&recent_article_path)?,
+    );
 
-    let relative_path = recent_article_path.strip_prefix(default_content_dir).unwrap();
+    let relative_path = recent_article_path
+        .strip_prefix(default_content_dir)
+        .unwrap();
     map.insert("recentLink".to_string(), path_to_html_path(&relative_path));
-    
+
     let mut article_file = fs::read_to_string(&recent_article_path)?;
     article_file = replace_md_placeholder(&article_file, &recent_article_path);
 
@@ -124,34 +138,75 @@ fn preload_variables() -> Result<HashMap<String, String>, std::io::Error> {
 
     if let Some(value) = vars.get("title") {
         map.insert("recentTitle".to_string(), value.to_string());
-    } 
-    
+    }
+
     if let Some(value) = vars.get("content") {
         map.insert("recentText".to_string(), value.to_string());
-    } 
+    }
 
     if let Some(value) = vars.get("imageHero") {
         map.insert("recentImage".to_string(), value.to_string());
-    } 
+    }
 
     if let Some(value) = vars.get("imageHeroAlt") {
         map.insert("recentImageDescription".to_string(), value.to_string());
-    } 
+    }
+
+    map.insert("articleList".to_string(), load_articles()?);
 
     Ok(map)
+}
+
+fn load_articles() -> io::Result<String> {
+    let mut final_string = String::from("");
+    let default_content_dir =
+        env::var("CONTENT_DIR").expect("Error: CONTENT_DIR environment variable not set");
+    let default_article_ext =
+        env::var("ARTICLES_SUBDIR").expect("Error: ARTICLES_SUBDIR environment variable not set");
+    let templates_dir_str =
+        env::var("TEMPLATES_DIR").expect("Error: TEMPLATES_DIR environment variable not set");
+    let default_pages_item_template = env::var("PAGES_ITEM_TEMPLATE")
+        .expect("Error: PAGES_ITEM_TEMPLATE environment variable not set");
+
+    let template =
+        fs::read_to_string(&(templates_dir_str.to_string() + "/" + &default_pages_item_template))?;
+    let paths = fs::read_dir(&(default_content_dir.to_string() + &default_article_ext))?;
+
+    for path in paths {
+        let entry = path?;
+        let file_path = entry.path();
+
+        if file_path.is_file() {
+            if let Some(extension) = file_path.extension() {
+                if extension == "html" {
+                    let re = Regex::new(r#"title=\{\{(.*)\}\}"#).unwrap();
+                    let article_file = fs::read_to_string(&file_path)?;
+                    if let Some(captures) = re.captures(&article_file) {
+                        if let Some(capture) = captures.get(1) {
+                            let mut map = HashMap::new();
+                            map.insert("itemLink".to_string(), default_article_ext.to_string() + "/" + &file_path.file_name().unwrap().to_string_lossy().to_string());
+                            map.insert("itemDescription".to_string(), capture.as_str().to_string());
+                            final_string.push_str(&replace_vars(&template, &map))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(final_string.to_string())
 }
 
 fn get_created_at(path: &Path) -> Result<String, io::Error> {
     let metadata = fs::metadata(path)?;
     let created_at = metadata.created()?;
     let local_created_at: DateTime<Local> = created_at.into();
-    
+
     // Format the creation time as a string
     let formatted_date = local_created_at.format("%Y-%m-%d %H:%M:%S").to_string();
-    
+
     Ok(formatted_date)
 }
-
 
 fn most_recent_html_file(directory_path: &str) -> PathBuf {
     if let Ok(entries) = fs::read_dir(directory_path) {
@@ -195,7 +250,7 @@ fn path_to_html_path(path: &Path) -> String {
     for component in path.components() {
         let part = component.as_os_str().to_string_lossy();
         html_path.push_str(&part);
-        html_path.push('/');    
+        html_path.push('/');
     }
 
     // Remove trailing slash if the path is not empty
