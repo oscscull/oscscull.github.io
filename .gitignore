@@ -1,3 +1,4 @@
 mocks/
 .vscode/
 .env
+static_generator/target/
