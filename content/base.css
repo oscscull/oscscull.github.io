@@ -67,10 +67,14 @@ nav a {
 }
 
 article {
-  width: calc(33% - 20px); /* 25% width with 20px margin between cards */
+  padding: 10px;
   margin-bottom: 20px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
+}
+
+.card {
+  width: calc(33% - 20px); /* 25% width with 20px margin between cards */
 }
 
 img {
@@ -177,13 +181,13 @@ img {
 }
 
 @media screen and (max-width: 1300px) {
-  article {
+  .card {
     width: calc(50% - 20px); /* One card per row on phones */
   }
 }
 
 @media screen and (max-width: 700px) {
-  article {
+  .card {
     width: calc(100% - 20px); /* One card per row on phones */
   }
 }

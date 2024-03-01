@@ -12,6 +12,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::time::SystemTime;
 use walkdir::WalkDir;
+use markdown::to_html;
 
 fn main() -> io::Result<()> {
     dotenv().ok();
@@ -374,7 +375,7 @@ fn replace_md_placeholder(input: &str, file_path: &Path) -> String {
             if let Some(parent_dir) = file_path.parent() {
                 let full_path = PathBuf::from(parent_dir).join(filename);
                 if let Ok(contents) = fs::read_to_string(&full_path) {
-                    return contents;
+                    return to_html(&contents);
                 }
             }
         }
