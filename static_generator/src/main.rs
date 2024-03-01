@@ -1,7 +1,7 @@
-use chrono::DateTime;
-use chrono::Local;
+use chrono::NaiveDateTime;
 use dotenv::dotenv;
-use regex::Regex;
+use fancy_regex::Regex;
+use markdown::to_html;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -10,9 +10,7 @@ use std::io;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
-use std::time::SystemTime;
 use walkdir::WalkDir;
-use markdown::to_html;
 
 fn main() -> io::Result<()> {
     dotenv().ok();
@@ -29,9 +27,6 @@ fn main() -> io::Result<()> {
 
     println!("HTML and CSS files copied successfully.");
 
-    // List available templates
-    //let templates_dir = "./templates";
-    //let template_files = list_template_files(templates_dir)?;
     Ok(())
 }
 
@@ -113,12 +108,11 @@ fn preload_variables() -> Result<HashMap<String, String>, std::io::Error> {
         env::var("CONTENT_DIR").expect("Error: CONTENT_DIR environment variable not set");
     let default_article_ext =
         env::var("ARTICLES_SUBDIR").expect("Error: ARTICLES_SUBDIR environment variable not set");
-    let recent_article_path =
+    let (recent_article_path, recent_article_date) =
         most_recent_html_file(&(default_content_dir.to_string() + &default_article_ext));
-
     map.insert(
         "recentDate".to_string(),
-        get_created_at(&recent_article_path)?,
+        recent_article_date.format("%Y-%m-%d %H:%M").to_string(),
     );
 
     let relative_path = recent_article_path
@@ -127,14 +121,14 @@ fn preload_variables() -> Result<HashMap<String, String>, std::io::Error> {
     map.insert("recentLink".to_string(), path_to_html_path(&relative_path));
 
     let mut article_file = fs::read_to_string(&recent_article_path)?;
-    article_file = replace_md_placeholder(&article_file, &recent_article_path);
 
-    let re = Regex::new(r#"<.*>((.|\n)*?)</.*>"#).unwrap();
-    if let Some(captures) = re.captures(&article_file) {
-        if let Some(capture) = captures.get(1) {
+    let re = Regex::new(r#"<(.*)>((.|\n)*)</\1>"#).unwrap();
+    if let Ok(Some(captures)) = re.captures(&article_file) {
+        if let Some(capture) = captures.get(2) {
             article_file = capture.as_str().to_string();
         }
     }
+    article_file = replace_md_placeholder(&article_file, &recent_article_path);
     let vars = read_vars(&article_file);
 
     if let Some(value) = vars.get("title") {
@@ -154,7 +148,6 @@ fn preload_variables() -> Result<HashMap<String, String>, std::io::Error> {
     }
 
     map.insert("articleList".to_string(), load_articles()?);
-
     Ok(map)
 }
 
@@ -182,10 +175,15 @@ fn load_articles() -> io::Result<String> {
                 if extension == "html" {
                     let re = Regex::new(r#"title=\{\{(.*)\}\}"#).unwrap();
                     let article_file = fs::read_to_string(&file_path)?;
-                    if let Some(captures) = re.captures(&article_file) {
+                    if let Ok(Some(captures)) = re.captures(&article_file) {
                         if let Some(capture) = captures.get(1) {
                             let mut map = HashMap::new();
-                            map.insert("itemLink".to_string(), default_article_ext.to_string() + "/" + &file_path.file_name().unwrap().to_string_lossy().to_string());
+                            map.insert(
+                                "itemLink".to_string(),
+                                default_article_ext.to_string()
+                                    + "/"
+                                    + &file_path.file_name().unwrap().to_string_lossy().to_string(),
+                            );
                             map.insert("itemDescription".to_string(), capture.as_str().to_string());
                             final_string.push_str(&replace_vars(&template, &map))
                         }
@@ -198,33 +196,32 @@ fn load_articles() -> io::Result<String> {
     Ok(final_string.to_string())
 }
 
-fn get_created_at(path: &Path) -> Result<String, io::Error> {
-    let metadata = fs::metadata(path)?;
-    let created_at = metadata.created()?;
-    let local_created_at: DateTime<Local> = created_at.into();
+fn most_recent_html_file(directory_path: &str) -> (PathBuf, NaiveDateTime) {
+    let mut most_recent_html_file: Option<(PathBuf, NaiveDateTime)> = None;
 
-    // Format the creation time as a string
-    let formatted_date = local_created_at.format("%Y-%m-%d %H:%M:%S").to_string();
-
-    Ok(formatted_date)
-}
-
-fn most_recent_html_file(directory_path: &str) -> PathBuf {
     if let Ok(entries) = fs::read_dir(directory_path) {
-        let mut most_recent_html_file: Option<(PathBuf, SystemTime)> = None;
-
-        for entry in entries.flatten() {
-            if let Ok(metadata) = entry.metadata() {
-                if metadata.is_file() {
-                    if let Some(extension) = entry.path().extension() {
-                        if extension == "html" {
-                            if let Ok(created_at) = metadata.created() {
-                                if let Some((_, current_time)) = most_recent_html_file {
-                                    if created_at > current_time {
-                                        most_recent_html_file = Some((entry.path(), created_at));
+        for entry in entries {
+            if let Ok(entry) = entry {
+                if let Some(extension) = entry.path().extension() {
+                    if extension == "html" {
+                        if let Some(_file_name) = entry.file_name().to_str() {
+                            if let Ok(article_file) = fs::read_to_string(&entry.path()) {
+                                let re = Regex::new(r#"date={{(.*)}}"#).unwrap();
+                                if let Ok(Some(captures)) = re.captures(&article_file) {
+                                    if let Some(capture) = captures.get(1) {
+                                        let naive_datetime =
+                                            NaiveDateTime::parse_from_str(capture.as_str(), "%Y-%m-%d %H:%M")
+                                                .unwrap();
+                                        if let Some((_, most_recent_time)) = most_recent_html_file {
+                                            if naive_datetime > most_recent_time {
+                                                most_recent_html_file =
+                                                    Some((entry.path(), naive_datetime));
+                                            }
+                                        } else {
+                                            most_recent_html_file =
+                                                Some((entry.path(), naive_datetime));
+                                        }
                                     }
-                                } else {
-                                    most_recent_html_file = Some((entry.path(), created_at));
                                 }
                             }
                         }
@@ -232,15 +229,17 @@ fn most_recent_html_file(directory_path: &str) -> PathBuf {
                 }
             }
         }
+    } else {
+        eprintln!("Error reading directory.");
+    }
 
-        // Return the path of the most recent HTML file, if any
-        if let Some((path, _)) = most_recent_html_file {
-            return path;
-        }
+    // Return the path of the most recent HTML file, if any
+    if let Some((path, datetime)) = most_recent_html_file {
+        return (path, datetime);
     }
 
     // If no HTML file found, panic
-    panic!("No HTML file found in the articles directory.");
+    panic!("No HTML file with date found in the articles directory.");
 }
 
 fn path_to_html_path(path: &Path) -> String {
@@ -263,20 +262,11 @@ fn path_to_html_path(path: &Path) -> String {
 }
 
 fn write_string_to_file(path: &PathBuf, content: &str) -> std::io::Result<()> {
-    // Open the file for writing
     let mut file = File::create(path)?;
-
-    // Write the string to the file
     file.write_all(content.as_bytes())?;
 
     Ok(())
 }
-
-// fn pretty_print_map(map: &HashMap<String, String>) {
-//     for (key, value) in map {
-//         println!("{} => {}", key, value);
-//     }
-// }
 
 fn transcribe(
     file: &str,
@@ -288,6 +278,7 @@ fn transcribe(
     final_result = replace_vars(&final_result, variables);
     final_result = replace_md_placeholder(&final_result, parent);
     let mut extracted_variables = variables.clone();
+
     loop {
         let mut found_match = false;
 
@@ -313,7 +304,6 @@ fn transcribe(
             break;
         }
     }
-
     final_result
 }
 
@@ -331,6 +321,9 @@ fn read_vars(input: &str) -> HashMap<String, String> {
                 if nesting_level == 2 {
                     in_value = true;
                 }
+                if nesting_level > 2 {
+                    value.push(c);
+                }
             }
             '}' => {
                 nesting_level -= 1;
@@ -339,6 +332,9 @@ fn read_vars(input: &str) -> HashMap<String, String> {
                     result.insert(key.trim().to_string(), value.trim().to_string());
                     key.clear();
                     value.clear();
+                }
+                if nesting_level > 2 {
+                    value.push(c);
                 }
             }
             _ => {

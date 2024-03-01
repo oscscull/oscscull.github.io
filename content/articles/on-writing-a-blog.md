@@ -10,7 +10,7 @@ It's been an interesting two years. I've really enjoyed my work, where I've lear
 surrounded by family. And Keiko and the girls have all benefitted from the opportunity to learn a lot of English. On the other hand, we've struggled to get off the ground financially, have been stuck in the small
 town I grew up in since we've arrived and struggled to get much of a social life together.
 
-Personally, I feel I've sacrificed a lot these last couple of years. There's a satisfaction in that, and I'm hopeful we'll all reap the benefits of those sacrifices for years to come.
+Personally, I feel I've sacrificed a lot for my family these last couple of years. There's a satisfaction in that, and I'm hopeful we'll all reap the benefits of those sacrifices for years to come.
 Sitting here now, flying in less than 24 hours, I think I can truly say the girls lives have been enriched by the experience.
 I hope that Keiko and I have a chance to pursue our own interests and lives a little more on the other side, while holding onto what we've made here.
 

@@ -11,5 +11,6 @@ walkdir = "2"
 dotenv = "0.15.0"
 chrono = "0.4"
 markdown = "1.0.0-alpha.16"
+fancy-regex = "0.13.0"
 
 
