@@ -2,6 +2,8 @@ use chrono::NaiveDateTime;
 use dotenv::dotenv;
 use fancy_regex::Regex;
 use markdown::to_html;
+use minify_html::minify;
+use minify_html::Cfg;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -70,7 +72,7 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
                     let base_file = fs::read_to_string(entry.path())?;
                     let transcribed_content =
                         transcribe(&base_file, &templates, &variables, entry.path());
-                    write_string_to_file(&dest_file_path, &transcribed_content)?;
+                    minified_string_to_file(&dest_file_path, &transcribed_content)?;
                 }
                 if ext == "css" {
                     let relative_path = entry.path().strip_prefix(src_dir).unwrap();
@@ -81,8 +83,9 @@ fn walk_files(src_dir: &Path, dest_dir: &Path) -> io::Result<()> {
                         fs::create_dir_all(parent_dir)?;
                     }
 
+                    let transcribed_content = fs::read_to_string(entry.path())?;
                     // Copy the CSS file
-                    fs::copy(entry.path(), &dest_file_path)?;
+                    minified_string_to_file(&dest_file_path, &transcribed_content)?;
                 }
             }
         }
@@ -173,11 +176,17 @@ fn load_articles() -> io::Result<String> {
         if file_path.is_file() {
             if let Some(extension) = file_path.extension() {
                 if extension == "html" {
-                    let re = Regex::new(r#"title=\{\{(.*)\}\}"#).unwrap();
+                    let mut map = HashMap::new();
+                    let re = Regex::new(r#"date=\{\{(.*)\}\}"#).unwrap();
                     let article_file = fs::read_to_string(&file_path)?;
                     if let Ok(Some(captures)) = re.captures(&article_file) {
                         if let Some(capture) = captures.get(1) {
-                            let mut map = HashMap::new();
+                            map.insert("itemDate".to_string(), capture.as_str().to_string());
+                        }
+                    }
+                    let re = Regex::new(r#"title=\{\{(.*)\}\}"#).unwrap();
+                    if let Ok(Some(captures)) = re.captures(&article_file) {
+                        if let Some(capture) = captures.get(1) {
                             map.insert(
                                 "itemLink".to_string(),
                                 default_article_ext.to_string()
@@ -261,9 +270,12 @@ fn path_to_html_path(path: &Path) -> String {
     html_path
 }
 
-fn write_string_to_file(path: &PathBuf, content: &str) -> std::io::Result<()> {
+fn minified_string_to_file(path: &PathBuf, content: &str) -> std::io::Result<()> {
     let mut file = File::create(path)?;
-    file.write_all(content.as_bytes())?;
+    let bytes_vec: Vec<u8> = content.as_bytes().to_vec();
+    let cfg = Cfg::new();
+    let minified = minify(&bytes_vec, &cfg);
+    file.write_all(&minified)?;
 
     Ok(())
 }
@@ -304,6 +316,7 @@ fn transcribe(
             break;
         }
     }
+    
     final_result
 }
 

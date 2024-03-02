@@ -1,6 +1,6 @@
 html,
 body {
-  font-family: "Arial", sans-serif;
+  font-family: "Roboto", sans-serif;
   margin: 0;
   padding: 0;
   height: 100%;
@@ -9,13 +9,24 @@ body {
 body {
   display: flex;
   flex-direction: column;
-  background-color: #ececec;
+  background-color: #fbfbfb;
   color: #333;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 400;
 }
+
+h1              { font-size: 2em; margin: .67em 0 }
+h2              { font-size: 1.5em; margin: .75em 0 }
+h3              { font-size: 1.17em; margin: .83em 0 }
+h5              { font-size: .83em; margin: 1.5em 0 }
+h6              { font-size: .75em; margin: 1.67em 0 }
+h1, h2, h3, h4,
+h5, h6          { font-weight: bolder }
 
 header {
   background-color: #333;
-  color: #ececec;
+  color: #fbfbfb;
 }
 
 nav {
@@ -41,7 +52,6 @@ nav a {
 }
 
 .content {
-  font-weight: 200;
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
@@ -67,10 +77,16 @@ nav a {
 }
 
 article {
-  padding: 10px;
+  padding: 40px;
   margin-bottom: 20px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
+  max-width: 100%;
+}
+
+article p {
+  width: 80ch;
+  max-width: 100%;
 }
 
 .card {
