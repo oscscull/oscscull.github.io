@@ -12,24 +12,28 @@ Use a better box model (opinionated).
 *,
 ::before,
 ::after {
-	box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 html {
-	/* Improve consistency of default fonts in all browsers. (https://github.com/sindresorhus/modern-normalize/issues/3) */
-	font-family:
-		system-ui,
-		'Segoe UI',
-		Roboto,
-		Helvetica,
-		Arial,
-		sans-serif,
-		'Apple Color Emoji',
-		'Segoe UI Emoji';
-	line-height: 1.15; /* 1. Correct the line height in all browsers. */
-	-webkit-text-size-adjust: 100%; /* 2. Prevent adjustments of font size after orientation changes in iOS. */
-	-moz-tab-size: 4; /* 3. Use a more readable tab size (opinionated). */
-	tab-size: 4; /* 3 */
+  /* Improve consistency of default fonts in all browsers. (https://github.com/sindresorhus/modern-normalize/issues/3) */
+  font-family:
+    system-ui,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
+  line-height: 1.15;
+  /* 1. Correct the line height in all browsers. */
+  -webkit-text-size-adjust: 100%;
+  /* 2. Prevent adjustments of font size after orientation changes in iOS. */
+  -moz-tab-size: 4;
+  /* 3. Use a more readable tab size (opinionated). */
+  tab-size: 4;
+  /* 3 */
 }
 
 /*
@@ -38,7 +42,8 @@ Sections
 */
 
 body {
-	margin: 0; /* Remove the margin in all browsers. */
+  margin: 0;
+  /* Remove the margin in all browsers. */
 }
 
 /*
@@ -52,8 +57,10 @@ Grouping content
 */
 
 hr {
-	height: 0; /* 1 */
-	color: inherit; /* 2 */
+  height: 0;
+  /* 1 */
+  color: inherit;
+  /* 2 */
 }
 
 /*
@@ -66,7 +73,7 @@ Add the correct text decoration in Chrome, Edge, and Safari.
 */
 
 abbr[title] {
-	text-decoration: underline dotted;
+  text-decoration: underline dotted;
 }
 
 /**
@@ -75,7 +82,7 @@ Add the correct font weight in Edge and Safari.
 
 b,
 strong {
-	font-weight: bolder;
+  font-weight: bolder;
 }
 
 /**
@@ -87,14 +94,16 @@ code,
 kbd,
 samp,
 pre {
-	font-family:
-		ui-monospace,
-		SFMono-Regular,
-		Consolas,
-		'Liberation Mono',
-		Menlo,
-		monospace; /* 1 */
-	font-size: 1em; /* 2 */
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    'Liberation Mono',
+    Menlo,
+    monospace;
+  /* 1 */
+  font-size: 1em;
+  /* 2 */
 }
 
 /**
@@ -102,7 +111,7 @@ Add the correct font size in all browsers.
 */
 
 small {
-	font-size: 80%;
+  font-size: 80%;
 }
 
 /**
@@ -111,18 +120,18 @@ Prevent 'sub' and 'sup' elements from affecting the line height in all browsers.
 
 sub,
 sup {
-	font-size: 75%;
-	line-height: 0;
-	position: relative;
-	vertical-align: baseline;
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
 }
 
 sub {
-	bottom: -0.25em;
+  bottom: -0.25em;
 }
 
 sup {
-	top: -0.5em;
+  top: -0.5em;
 }
 
 /*
@@ -136,8 +145,10 @@ Tabular data
 */
 
 table {
-	text-indent: 0; /* 1 */
-	border-color: inherit; /* 2 */
+  text-indent: 0;
+  /* 1 */
+  border-color: inherit;
+  /* 2 */
 }
 
 /*
@@ -155,10 +166,14 @@ input,
 optgroup,
 select,
 textarea {
-	font-family: inherit; /* 1 */
-	font-size: 100%; /* 1 */
-	line-height: 1.15; /* 1 */
-	margin: 0; /* 2 */
+  font-family: inherit;
+  /* 1 */
+  font-size: 100%;
+  /* 1 */
+  line-height: 1.15;
+  /* 1 */
+  margin: 0;
+  /* 2 */
 }
 
 /**
@@ -167,7 +182,7 @@ Remove the inheritance of text transform in Edge and Firefox.
 
 button,
 select {
-	text-transform: none;
+  text-transform: none;
 }
 
 /**
@@ -178,7 +193,7 @@ button,
 [type='button'],
 [type='reset'],
 [type='submit'] {
-	-webkit-appearance: button;
+  -webkit-appearance: button;
 }
 
 /**
@@ -186,8 +201,8 @@ Remove the inner border and padding in Firefox.
 */
 
 ::-moz-focus-inner {
-	border-style: none;
-	padding: 0;
+  border-style: none;
+  padding: 0;
 }
 
 /**
@@ -195,7 +210,7 @@ Restore the focus styles unset by the previous rule.
 */
 
 :-moz-focusring {
-	outline: 1px dotted ButtonText;
+  outline: 1px dotted ButtonText;
 }
 
 /**
@@ -204,7 +219,7 @@ See: https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d4
 */
 
 :-moz-ui-invalid {
-	box-shadow: none;
+  box-shadow: none;
 }
 
 /**
@@ -212,7 +227,7 @@ Remove the padding so developers are not caught out when they zero out 'fieldset
 */
 
 legend {
-	padding: 0;
+  padding: 0;
 }
 
 /**
@@ -220,7 +235,7 @@ Add the correct vertical alignment in Chrome and Firefox.
 */
 
 progress {
-	vertical-align: baseline;
+  vertical-align: baseline;
 }
 
 /**
@@ -229,7 +244,7 @@ Correct the cursor style of increment and decrement buttons in Safari.
 
 ::-webkit-inner-spin-button,
 ::-webkit-outer-spin-button {
-	height: auto;
+  height: auto;
 }
 
 /**
@@ -238,8 +253,10 @@ Correct the cursor style of increment and decrement buttons in Safari.
 */
 
 [type='search'] {
-	-webkit-appearance: textfield; /* 1 */
-	outline-offset: -2px; /* 2 */
+  -webkit-appearance: textfield;
+  /* 1 */
+  outline-offset: -2px;
+  /* 2 */
 }
 
 /**
@@ -247,7 +264,7 @@ Remove the inner padding in Chrome and Safari on macOS.
 */
 
 ::-webkit-search-decoration {
-	-webkit-appearance: none;
+  -webkit-appearance: none;
 }
 
 /**
@@ -256,8 +273,10 @@ Remove the inner padding in Chrome and Safari on macOS.
 */
 
 ::-webkit-file-upload-button {
-	-webkit-appearance: button; /* 1 */
-	font: inherit; /* 2 */
+  -webkit-appearance: button;
+  /* 1 */
+  font: inherit;
+  /* 2 */
 }
 
 /*
@@ -270,7 +289,7 @@ Add the correct display in Chrome and Safari.
 */
 
 summary {
-	display: list-item;
+  display: list-item;
 }
 
 
@@ -293,13 +312,39 @@ body {
   font-weight: 400;
 }
 
-h1              { font-size: 2em; margin: .67em 0 }
-h2              { font-size: 1.5em; margin: .75em 0 }
-h3              { font-size: 1.17em; margin: .83em 0 }
-h5              { font-size: .83em; margin: 1.5em 0 }
-h6              { font-size: .75em; margin: 1.67em 0 }
-h1, h2, h3, h4,
-h5, h6          { font-weight: bolder }
+h1 {
+  font-size: 2em;
+  margin: .67em 0
+}
+
+h2 {
+  font-size: 1.5em;
+  margin: .75em 0
+}
+
+h3 {
+  font-size: 1.17em;
+  margin: .83em 0
+}
+
+h5 {
+  font-size: .83em;
+  margin: 1.5em 0
+}
+
+h6 {
+  font-size: .75em;
+  margin: 1.67em 0
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: bolder
+}
 
 header {
   background-color: #333;
@@ -366,9 +411,6 @@ article p {
   max-width: 100%;
 }
 
-.card {
-  width: calc(33% - 20px); /* 25% width with 20px margin between cards */
-}
 
 img {
   width: 100%;
@@ -377,6 +419,15 @@ img {
   max-height: 100%;
   object-fit: contain;
   border-radius: 8px;
+}
+
+.card {
+  width: calc(33% - 20px);
+  /* 25% width with 20px margin between cards */
+}
+
+.card img {
+  height: 75vh;
 }
 
 .info {
@@ -392,7 +443,8 @@ img {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 3; /* number of lines to show */
+  -webkit-line-clamp: 3;
+  /* number of lines to show */
   line-clamp: 3;
   -webkit-box-orient: vertical;
 }
@@ -422,7 +474,8 @@ img {
 }
 
 .aboutContent .image-container {
-  border-radius: 10px; /* Adjust as needed */
+  border-radius: 10px;
+  /* Adjust as needed */
   max-width: 500px;
 }
 
@@ -462,10 +515,18 @@ img {
   background-color: #2980b9;
 }
 
+.content img {
+  height: 90vh;
+  float: left;
+  width: auto;
+  padding: 15px;
+}
+
 /* Additional styling for the left section on smaller screens */
 @media screen and (max-width: 700px) {
   .left {
-    max-width: 100%; /* Full width on smaller screens */
+    max-width: 100%;
+    /* Full width on smaller screens */
   }
 
   .aboutContent .left {
@@ -475,12 +536,14 @@ img {
 
 @media screen and (max-width: 1300px) {
   .card {
-    width: calc(50% - 20px); /* One card per row on phones */
+    width: calc(50% - 20px);
+    /* One card per row on phones */
   }
 }
 
 @media screen and (max-width: 700px) {
   .card {
-    width: calc(100% - 20px); /* One card per row on phones */
+    width: calc(100% - 20px);
+    /* One card per row on phones */
   }
 }

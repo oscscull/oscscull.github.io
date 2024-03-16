@@ -218,9 +218,11 @@ fn most_recent_html_file(directory_path: &str) -> (PathBuf, NaiveDateTime) {
                                 let re = Regex::new(r#"date={{(.*)}}"#).unwrap();
                                 if let Ok(Some(captures)) = re.captures(&article_file) {
                                     if let Some(capture) = captures.get(1) {
-                                        let naive_datetime =
-                                            NaiveDateTime::parse_from_str(capture.as_str(), "%Y-%m-%d %H:%M")
-                                                .unwrap();
+                                        let naive_datetime = NaiveDateTime::parse_from_str(
+                                            capture.as_str(),
+                                            "%Y-%m-%d %H:%M",
+                                        )
+                                        .unwrap();
                                         if let Some((_, most_recent_time)) = most_recent_html_file {
                                             if naive_datetime > most_recent_time {
                                                 most_recent_html_file =
@@ -272,10 +274,17 @@ fn path_to_html_path(path: &Path) -> String {
 
 fn minified_string_to_file(path: &PathBuf, content: &str) -> std::io::Result<()> {
     let mut file = File::create(path)?;
-    let bytes_vec: Vec<u8> = content.as_bytes().to_vec();
+    let mut bytes_vec: Vec<u8> = content.as_bytes().to_vec();
     let cfg = Cfg::new();
-    let minified = minify(&bytes_vec, &cfg);
-    file.write_all(&minified)?;
+    // Get the command-line arguments
+    let args: Vec<String> = env::args().collect();
+
+    // Check if the specific flag is passed
+    if !args.iter().any(|arg| arg == "--nominify") {
+        bytes_vec = minify(&bytes_vec, &cfg);
+    }
+
+    file.write_all(&bytes_vec)?;
 
     Ok(())
 }
@@ -316,7 +325,7 @@ fn transcribe(
             break;
         }
     }
-    
+
     final_result
 }
 
@@ -367,13 +376,15 @@ fn read_vars(input: &str) -> HashMap<String, String> {
 fn replace_vars(string: &str, replacements: &HashMap<String, String>) -> String {
     let mut result = string.to_string();
     for (placeholder, value) in replacements {
-        result = result.replace(&format!("[[{}]]", placeholder), value);
+        let pattern = format!(r"\[\[{}]]", regex::escape(placeholder));
+        let re = Regex::new(&pattern).unwrap();
+        result = re.replace_all(&result, value.as_str()).to_string();
     }
-
+    
     // Replace any placeholders not found in the hashmap with an empty string
     let re = Regex::new(r"\[\[.*\]\]").unwrap();
     result = re.replace_all(&result, "").to_string();
-
+    
     result
 }
 
