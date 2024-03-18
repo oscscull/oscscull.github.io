@@ -139,7 +139,7 @@ fn preload_variables() -> Result<HashMap<String, String>, std::io::Error> {
     }
 
     if let Some(value) = vars.get("content") {
-        map.insert("recentText".to_string(), value.to_string());
+        map.insert("recentText".to_string(), short_text_preview(value.to_string()));
     }
 
     if let Some(value) = vars.get("imageHero") {
@@ -430,4 +430,21 @@ fn list_template_files(templates_dir: &str) -> io::Result<HashMap<String, String
     }
 
     Ok(template_files)
+}
+
+fn short_text_preview(input: String) -> String
+{
+    // Remove all HTML tags
+    let input_no_tags = Regex::new(r#"<[^>]+>"#)
+        .unwrap()
+        .replace_all(&input, "");
+
+    // Trim to 15 characters and add ellipsis if necessary
+    let trimmed_text = if input_no_tags.chars().count() > 75 {
+        input_no_tags.chars().take(75).collect::<String>() + "..."
+    } else {
+        input_no_tags.to_string()
+    };
+
+    trimmed_text
 }
