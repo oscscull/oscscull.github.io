@@ -400,7 +400,7 @@ nav a {
 }
 
 article {
-  padding: 40px;
+  padding: 20px;
   margin-bottom: 20px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
@@ -422,13 +422,22 @@ img {
   border-radius: 8px;
 }
 
+.row {
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
 .card {
   width: calc(33% - 20px);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  max-width: 100%;
+  padding: 5px;
   /* 25% width with 20px margin between cards */
 }
 
 .card img {
-  height: 75vh;
+  max-height: 65vh;
 }
 
 .info {
@@ -496,7 +505,7 @@ img {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-  height: 150px;
+  height: 200px;
 }
 
 .sendfox-form p {
@@ -533,6 +542,14 @@ img {
 
 /* Additional styling for the left section on smaller screens */
 @media screen and (max-width: 700px) {
+  .content {
+    padding: 5px 5px 5px 5px;
+  }
+
+  .article{
+    padding: 10px;
+  }
+
   .left {
     max-width: 100%;
     /* Full width on smaller screens */
@@ -544,6 +561,11 @@ img {
 }
 
 @media screen and (max-width: 1300px) {
+  .row{
+    flex-direction: column;
+    justify-content: normal;
+  }
+  
   .card {
     width: calc(50% - 20px);
     /* One card per row on phones */
