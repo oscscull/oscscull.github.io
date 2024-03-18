@@ -307,6 +307,7 @@ body {
   flex-direction: column;
   background-color: #fbfbfb;
   color: #333;
+  text-size-adjust: none;
   font-size: 18px;
   line-height: 1.4;
   font-weight: 400;
@@ -516,7 +517,7 @@ img {
 }
 
 .content img {
-  height: 90vh;
+  max-height: 90vh;
   float: left;
   width: auto;
   padding: 15px;
